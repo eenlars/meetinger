@@ -19,11 +19,11 @@ export async function POST(req: Request) {
     const language = formData.get('language') as string
 
     if (password !== process.env.PASSWORD) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+      return NextResponse.json({ error: 'Verkeerd wachtwoord' }, { status: 401 })
     }
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: 'Geen bestand aangeleverd' }, { status: 400 })
     }
 
     let transcription
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       })
     } catch (error) {
       console.error('Error during transcription:', error)
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to transcribe audio' }, { status: 500 })
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'Audio transcriptie mislukt' }, { status: 500 })
     }
 
     let completion
@@ -59,7 +59,10 @@ export async function POST(req: Request) {
       console.log('cost', ((completion.usage?.total_tokens ?? 0) * 0.28) / 1000000)
     } catch (error) {
       console.error('Error during transcript formatting:', error)
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to format transcript' }, { status: 500 })
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Transcript formatteren mislukt' },
+        { status: 500 }
+      )
     }
 
     const formattedTranscript = completion.choices[0].message.content
@@ -67,6 +70,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ text: formattedTranscript, seconds: (Date.now() - start) / 1000 })
   } catch (error) {
     console.error('General error:', error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'An unknown error occurred' }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Een onbekende fout is opgetreden' },
+      { status: 500 }
+    )
   }
 }

@@ -2,14 +2,16 @@ import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
 const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
+  apiKey: process.env.DEEPSEEK_API_KEY || '',
   baseURL: 'https://api.deepseek.com/v1',
 })
+
+export const runtime = 'edge'
 
 export async function POST(req: Request) {
   try {
     const data = await req.json()
-    const { transcript, command, password } = data
+    const { transcript, command, password, language } = data
 
     if (!transcript || !command || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -24,7 +26,9 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant. Process the following text based on the user command.',
+          content: `You are a helpful assistant. Process the following text based on the user command. Return the response in this language: ${
+            language || 'nl'
+          }`,
         },
         {
           role: 'user',
@@ -33,11 +37,12 @@ export async function POST(req: Request) {
       ],
     })
 
-    //price deepseek reasoner: $2.19 per 1M tokens
-    console.log('cost', ((completion.usage?.total_tokens ?? 0) * 2.19) / 1000000)
+    const cost = ((completion.usage?.total_tokens ?? 0) * 0.28) / 1000000
+    console.log('cost', cost)
 
     return NextResponse.json({
       result: completion.choices[0].message.content,
+      cost,
     })
   } catch (error) {
     console.error('Error processing command:', error)

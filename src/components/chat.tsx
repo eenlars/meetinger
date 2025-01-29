@@ -63,7 +63,7 @@ export default function Chat() {
                   onChange={event => {
                     setInput(event.target.value);
                   }}
-                  className="w-[95%] mr-2 border-0 ring-offset-0 focus-visible:ring-0 focus-visible:outline-none focus:outline-none focus:ring-0 ring-0 focus-visible:border-none border-transparent focus:border-transparent focus-visible:ring-none"
+                  className="w-[95%] mr-2 border-0 ring-offset-0 focus-visible:ring-0 focus-visible:outline-hidden focus:outline-hidden focus:ring-0 ring-0 focus-visible:border-none border-transparent focus:border-transparent focus-visible:ring-none"
                   placeholder='Ask me anything...'
                 />
                 <Button disabled={!input.trim()}>

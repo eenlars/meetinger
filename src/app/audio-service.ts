@@ -1,7 +1,7 @@
 'use client'
 
 export const AudioService = {
-  transcribe: async (file: File, password: string, language: string) => {
+  transcribe: async (file: File, password: string, language: string): Promise<AIResult> => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('password', password)
@@ -12,13 +12,20 @@ export const AudioService = {
       body: formData,
     })
 
-    const data = await response.json()
+    if (!response.ok) {
+      const error = (await response.json()).error
+      return Promise.reject(new Error(error || 'Audio transcriptie mislukt'))
+    }
 
-    localStorage.setItem('transcript', data.text)
+    const data = (await response.json()) as AIResult
+
+    if (data.text) localStorage.setItem('transcript', data.text)
     return data
   },
 
-  processCommand: async (transcript: string, command: string, password: string, language: string) => {
+  processCommand: async (transcript: string | null, command: string, password: string, language: string): Promise<AIResult> => {
+    if (!transcript) return Promise.reject(new Error('Geen transcriptie gevonden'))
+
     const response = await fetch('/api/audio/custom-action', {
       method: 'POST',
       headers: {
@@ -32,13 +39,19 @@ export const AudioService = {
       }),
     })
 
-    const data = await response.json()
     if (response.ok) {
-      localStorage.setItem('actionResult', JSON.stringify(data))
+      const data = (await response.json()) as AIResult
+      if (data.text) localStorage.setItem('actionResult', JSON.stringify(data))
+      return data
     } else {
-      throw new Error(data.error || 'Opdracht verwerken mislukt')
+      const error = (await response.json()).error
+      return Promise.reject(new Error(error || 'Opdracht verwerken mislukt'))
     }
-
-    return data
   },
+}
+
+export type AIResult = {
+  text: string | null
+  cost: number
+  seconds: number
 }

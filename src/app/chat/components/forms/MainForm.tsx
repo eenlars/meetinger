@@ -3,9 +3,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { AudioSelector } from './AudioSelector'
-import { LanguageSelector } from './LanguageSelector'
-import { PasswordSelector } from './PasswordSelector'
+import { AudioSelector } from '../ui/AudioSelector'
+import { LanguageSelector } from '../ui/LanguageSelector'
+import { PasswordSelector } from '../ui/PasswordSelector'
 
 type Props = {
   onSubmit: (e: React.FormEvent) => Promise<void>

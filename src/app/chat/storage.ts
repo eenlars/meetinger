@@ -1,5 +1,6 @@
 // app/storage.ts
-import { CommandResult, TranscriptData } from './types'
+
+import type { AIResult } from '../audio-service'
 
 const TRANSCRIPT_KEY = 'transcript'
 const COMMAND_RESULT_KEY = 'commandResult'
@@ -16,11 +17,11 @@ export const loadPersistedData = () => {
   }
 }
 
-export const saveTranscript = (data: TranscriptData) => {
+export const saveTranscript = (data: AIResult) => {
   localStorage.setItem(TRANSCRIPT_KEY, JSON.stringify(data))
 }
 
-export const saveCommandResult = (result: CommandResult) => {
+export const saveCommandResult = (result: AIResult) => {
   localStorage.setItem(COMMAND_RESULT_KEY, JSON.stringify(result))
 }
 

@@ -1,3 +1,4 @@
+import type { AIResult } from '@/app/audio-service'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
@@ -10,8 +11,11 @@ const deepseek = new OpenAI({
   baseURL: 'https://api.deepseek.com/v1',
 })
 
+const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+
 export async function POST(req: Request) {
   try {
+    let cost = 0
     const start = Date.now()
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -19,6 +23,7 @@ export async function POST(req: Request) {
     const language = formData.get('language') as string
 
     if (password !== process.env.PASSWORD) {
+      console.log('Verkeerd wachtwoord')
       return NextResponse.json({ error: 'Verkeerd wachtwoord' }, { status: 401 })
     }
 
@@ -26,16 +31,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Geen bestand aangeleverd' }, { status: 400 })
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'Bestand is te groot. Maximum grootte is 20MB.' }, { status: 400 })
+    }
+
     let transcription
     try {
+      const duration = Math.ceil(file.size / (16000 * 2)) // Estimate duration in seconds based on file size
       transcription = await openai.audio.transcriptions.create({
         file: file,
         model: 'whisper-1',
         language: language ?? 'en',
       })
+      cost += (duration / 60) * 0.006 // Convert duration to minutes and multiply by cost per minute
     } catch (error) {
       console.error('Error during transcription:', error)
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'Audio transcriptie mislukt' }, { status: 500 })
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'Audiotranscriptie mislukt' }, { status: 500 })
     }
 
     let completion
@@ -55,8 +66,6 @@ export async function POST(req: Request) {
           },
         ],
       })
-      //pricing deepseek chat: 0.28 per 1M tokens
-      console.log('cost', ((completion.usage?.total_tokens ?? 0) * 0.28) / 1000000)
     } catch (error) {
       console.error('Error during transcript formatting:', error)
       return NextResponse.json(
@@ -64,10 +73,17 @@ export async function POST(req: Request) {
         { status: 500 }
       )
     }
+    //pricing deepseek chat: 0.28 per 1M tokens
+    cost += ((completion?.usage?.total_tokens ?? 0) * 0.28) / 1000000
 
     const formattedTranscript = completion.choices[0].message.content
 
-    return NextResponse.json({ text: formattedTranscript, seconds: (Date.now() - start) / 1000 })
+    const res: AIResult = {
+      text: formattedTranscript,
+      cost,
+      seconds: (Date.now() - start) / 1000,
+    }
+    return NextResponse.json(res)
   } catch (error) {
     console.error('General error:', error)
     return NextResponse.json(

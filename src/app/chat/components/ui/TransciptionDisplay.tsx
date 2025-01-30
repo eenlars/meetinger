@@ -1,10 +1,10 @@
 // app/components/TranscriptDisplay.tsx
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { TranscriptData } from '../types'
+import type { AIResult } from '../../../audio-service'
 
 type Props = {
-  transcriptData: TranscriptData
+  transcriptData: AIResult
   onDelete: () => void
 }
 
@@ -18,5 +18,6 @@ export const TranscriptDisplay = ({ transcriptData, onDelete }: Props) => (
     </div>
     <p className="whitespace-pre-wrap mb-2">{transcriptData.text}</p>
     <p className="text-sm text-muted-foreground/90">{transcriptData.seconds} seconden</p>
+    <p className="text-sm text-muted-foreground/90">Kosten: €{transcriptData.cost.toFixed(4)}</p>
   </Card>
 )

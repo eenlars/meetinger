@@ -1,3 +1,4 @@
+import type { AIResult } from '@/app/audio-service'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
@@ -10,6 +11,7 @@ export const runtime = 'edge'
 
 export async function POST(req: Request) {
   try {
+    const start = Date.now()
     const data = await req.json()
     const { transcript, command, password, language } = data
 
@@ -37,13 +39,15 @@ export async function POST(req: Request) {
       ],
     })
 
+    // 0.28 is the price per 1m tokens
     const cost = ((completion.usage?.total_tokens ?? 0) * 0.28) / 1000000
-    console.log('cost', cost)
 
-    return NextResponse.json({
-      result: completion.choices[0].message.content,
+    const res: AIResult = {
+      text: completion.choices[0].message.content,
       cost,
-    })
+      seconds: (Date.now() - start) / 1000,
+    }
+    return NextResponse.json(res)
   } catch (error) {
     console.error('Error processing command:', error)
     return NextResponse.json(

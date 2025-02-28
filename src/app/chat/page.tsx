@@ -1,7 +1,9 @@
 'use client'
 
 import { GenUICard } from '@/components/cards/genuicard'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card } from '@/components/ui/card'
+import { AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { AIResult } from '../audio-service'
 import { AudioService } from '../audio-service'
@@ -80,7 +82,13 @@ export default function GenUI() {
             <div className="space-y-4">
               <TranscriptDisplay transcriptData={transcriptData} onDelete={handleDeleteTranscript} />
               <CommandForm onSubmit={handleCommandSubmit} disabled={isProcessingCommand} />
-              {commandError && <div className="text-red-500 text-sm">{commandError}</div>}
+              {commandError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Fout</AlertTitle>
+                  <AlertDescription className="mt-2 whitespace-pre-wrap break-words">{commandError}</AlertDescription>
+                </Alert>
+              )}
               {commandResult && (
                 <Card className="p-4">
                   <h3 className="font-bold mb-2">Resultaat van de opdracht:</h3>
@@ -95,7 +103,13 @@ export default function GenUI() {
             <>
               {!isLoading && <GenUICard />}
               {isLoading && <div className="text-center text-gray-500">Bezig met audio transcriptie...</div>}
-              {error && <div className="text-red-500 mb-4">{error}</div>}
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Fout</AlertTitle>
+                  <AlertDescription className="mt-2 whitespace-pre-wrap break-words">{error}</AlertDescription>
+                </Alert>
+              )}
               <MainForm
                 onSubmit={handleSubmit}
                 file={file}

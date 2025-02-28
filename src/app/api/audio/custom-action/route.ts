@@ -16,11 +16,20 @@ export async function POST(req: Request) {
     const { transcript, command, password, language } = data
 
     if (!transcript || !command || !password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json(
+        {
+          error:
+            'Vereiste velden ontbreken: ' +
+            (!transcript ? 'transcript, ' : '') +
+            (!command ? 'command, ' : '') +
+            (!password ? 'password' : ''),
+        },
+        { status: 400 }
+      )
     }
 
     if (password !== process.env.PASSWORD) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+      return NextResponse.json({ error: 'Ongeldig wachtwoord. Probeer het opnieuw.' }, { status: 401 })
     }
 
     const completion = await deepseek.chat.completions.create({
@@ -50,11 +59,24 @@ export async function POST(req: Request) {
     return NextResponse.json(res)
   } catch (error) {
     console.error('Error processing command:', error)
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-      },
-      { status: 500 }
-    )
+
+    // Determine if it's an API connection error or a model error
+    let errorMessage = 'Er is een onbekende fout opgetreden'
+
+    if (error instanceof Error) {
+      errorMessage = `Fout bij het verwerken van de opdracht: ${error.message}`
+
+      // Handle network and connection errors specifically
+      if (error.message.includes('ECONNREFUSED') || error.message.includes('ETIMEDOUT')) {
+        errorMessage = 'Kon geen verbinding maken met de AI-service. Controleer uw internetverbinding en probeer het opnieuw.'
+      }
+
+      // Handle quota or rate limit errors
+      if (error.message.includes('rate') || error.message.includes('quota') || error.message.includes('limit')) {
+        errorMessage = 'API-limiet bereikt. Probeer het later opnieuw.'
+      }
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

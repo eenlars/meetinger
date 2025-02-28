@@ -46,7 +46,15 @@ export async function POST(req: Request) {
       cost += (duration / 60) * 0.006 // Convert duration to minutes and multiply by cost per minute
     } catch (error) {
       console.error('Error during transcription:', error)
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'Audiotranscriptie mislukt' }, { status: 500 })
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? `Audiotranscriptie mislukt: ${error.message}`
+              : 'Audiotranscriptie mislukt: Er is een onbekende fout opgetreden',
+        },
+        { status: 500 }
+      )
     }
 
     let completion
@@ -69,7 +77,12 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error('Error during transcript formatting:', error)
       return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Transcript formatteren mislukt' },
+        {
+          error:
+            error instanceof Error
+              ? `Transcript formatteren mislukt: ${error.message}`
+              : 'Transcript formatteren mislukt: Er is een onbekende fout opgetreden',
+        },
         { status: 500 }
       )
     }
@@ -87,7 +100,12 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('General error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Een onbekende fout is opgetreden' },
+      {
+        error:
+          error instanceof Error
+            ? `Een fout is opgetreden: ${error.message}`
+            : 'Een onbekende fout is opgetreden tijdens de verwerking van uw verzoek',
+      },
       { status: 500 }
     )
   }

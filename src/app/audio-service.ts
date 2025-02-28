@@ -13,8 +13,10 @@ export const AudioService = {
     })
 
     if (!response.ok) {
-      const error = (await response.json()).error
-      return Promise.reject(new Error(error || 'Audio transcriptie mislukt'))
+      const errorData = await response.json()
+      const errorMessage = errorData.error || 'Audio transcriptie mislukt'
+      console.error('Transcriptie fout:', errorMessage)
+      return Promise.reject(new Error(errorMessage))
     }
 
     const data = (await response.json()) as AIResult
@@ -44,8 +46,15 @@ export const AudioService = {
       if (data.text) localStorage.setItem('actionResult', JSON.stringify(data))
       return data
     } else {
-      const error = (await response.json()).error
-      return Promise.reject(new Error(error || 'Opdracht verwerken mislukt'))
+      try {
+        const errorData = await response.json()
+        const errorMessage = errorData.error || 'Opdracht verwerken mislukt'
+        console.error('Command fout:', errorMessage)
+        return Promise.reject(new Error(errorMessage))
+      } catch (e) {
+        // If response cannot be parsed as JSON
+        return Promise.reject(new Error('Opdracht verwerken mislukt: Ongeldig antwoord van de server'))
+      }
     }
   },
 }
